@@ -15,6 +15,12 @@ html {
   }
 }
 
+/* Keep the hero background stable while the page scrolls. */
+img[alt="Heavy duty mining truck"] {
+  transform: scale(1.1) !important;
+  transition: none !important;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
