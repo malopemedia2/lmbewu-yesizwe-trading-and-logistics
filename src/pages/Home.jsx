@@ -1,35 +1,49 @@
 import { Link } from "react-router-dom";
-import { memo, useState, useEffect, useCallback, useRef } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 
-// ─────────────────────────────────────────────
-// CONFIGURATION
-// ─────────────────────────────────────────────
 const HERO_CONFIG = {
-  headline: "Mining & Logistics Solutions",
+  eyebrow: "South Africa's trusted industrial partner",
+  headline: "Mining & logistics, built for the real world.",
   subheadline:
-    "Reliable transport, plant hire, maintenance & industrial services in South Africa.",
-  ctaText: "Request a Quote",
-  ctaLink: "/contact?intent=quote",
+    "Reliable transport, plant hire, maintenance and industrial services delivered safely, on time and ready for the demands of your operation.",
   truckImage:
     "https://res.cloudinary.com/doaj3nv5i/image/upload/v1782854521/mwhrii8ebicu0wyu5t5q.jpg",
   stats: [
-    { value: "8+", label: "Years Experience" },
-    { value: "20+", label: "Projects Delivered" },
-    { value: "12+", label: "Heavy Vehicles" },
-    { value: "100%", label: "Safety Record" },
+    { value: 8, suffix: "+", label: "Years experience" },
+    { value: 20, suffix: "+", label: "Projects delivered" },
+    { value: 12, suffix: "+", label: "Heavy vehicles" },
+    { value: 100, suffix: "%", label: "Safety focused" },
   ],
 };
 
-// ─────────────────────────────────────────────
-// AUTOMATION HOOKS (Enterprise Ready)
-// ─────────────────────────────────────────────
+const SERVICES = [
+  {
+    title: "Transport & hauling",
+    desc: "Dependable heavy-duty transport and site logistics that keep materials and operations moving.",
+    icon: "🚛",
+  },
+  {
+    title: "Plant hire",
+    desc: "Capable equipment for earthworks, construction and mining projects, with practical support when you need it.",
+    icon: "⚙️",
+  },
+  {
+    title: "Maintenance & support",
+    desc: "Responsive mechanical support and preventive maintenance designed to reduce downtime on site.",
+    icon: "🔧",
+  },
+];
 
-// Intersection Observer for scroll animations
-function useInView(threshold = 0.1) {
+function useInView(threshold = 0.15) {
   const [isInView, setIsInView] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
+    if (!ref.current || typeof IntersectionObserver === "undefined") {
+      setIsInView(true);
+      return undefined;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -40,379 +54,171 @@ function useInView(threshold = 0.1) {
       { threshold }
     );
 
-    if (ref.current) observer.observe(ref.current);
+    observer.observe(ref.current);
     return () => observer.disconnect();
   }, [threshold]);
 
   return [ref, isInView];
 }
 
-// Counter animation hook
-function useCountUp(end, duration = 2000, startOnView = false) {
+function useCountUp(end, duration = 1400) {
   const [count, setCount] = useState(0);
-  const [ref, isInView] = useInView(0.3);
+  const [ref, isInView] = useInView(0.4);
   const hasAnimated = useRef(false);
 
   useEffect(() => {
-    if (!startOnView || (isInView && !hasAnimated.current)) {
-      hasAnimated.current = true;
-      let startTime = null;
-      const step = (timestamp) => {
-        if (!startTime) startTime = timestamp;
-        const progress = Math.min((timestamp - startTime) / duration, 1);
-        setCount(Math.floor(progress * end));
-        if (progress < 1) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
+    if (!isInView || hasAnimated.current) return undefined;
+    hasAnimated.current = true;
+
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setCount(end);
+      return undefined;
     }
-  }, [isInView, end, duration, startOnView]);
+
+    let frame;
+    const start = performance.now();
+    const update = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      setCount(Math.floor(progress * end));
+      if (progress < 1) frame = requestAnimationFrame(update);
+    };
+
+    frame = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(frame);
+  }, [duration, end, isInView]);
 
   return [ref, count];
 }
 
-// ─────────────────────────────────────────────
-// SUB-COMPONENTS
-// ─────────────────────────────────────────────
-
-const StatCard = memo(function StatCard({ value, label, delay }) {
-  const numericValue = parseInt(value);
-  const suffix = value.replace(/[0-9]/g, "");
-  const [ref, count] = useCountUp(numericValue, 2000, true);
+const StatCard = memo(function StatCard({ value, suffix, label }) {
+  const [ref, count] = useCountUp(value);
 
   return (
-    <div
-      ref={ref}
-      className="text-center px-4 py-6 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className="text-3xl md:text-4xl font-bold text-white">
+    <div ref={ref} className="border-l border-white/20 px-4 first:border-l-0 md:px-6">
+      <p className="text-3xl font-black tracking-tight text-white sm:text-4xl">
         {count}
         {suffix}
-      </div>
-      <div className="text-sm text-white/80 mt-1 uppercase tracking-wider">
+      </p>
+      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
         {label}
+      </p>
+    </div>
+  );
+});
+
+const ServiceCard = memo(function ServiceCard({ title, desc, icon, index }) {
+  const [ref, isInView] = useInView(0.2);
+
+  return (
+    <article
+      ref={ref}
+      className={`group rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-700 hover:-translate-y-2 hover:border-[#16A34A]/50 hover:shadow-xl hover:shadow-[#0B2E13]/10 ${
+        isInView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+      }`}
+      style={{ transitionDelay: `${index * 100}ms` }}
+    >
+      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-[#0B2E13] text-3xl shadow-lg shadow-[#0B2E13]/20 transition-transform duration-300 group-hover:scale-110">
+        {icon}
       </div>
-    </div>
-  );
-});
-
-const DiagonalAccent = memo(function DiagonalAccent() {
-  return (
-    <div className="absolute top-0 right-0 w-full h-full overflow-hidden pointer-events-none">
-      {/* White diagonal band - using SVG for reliability */}
-      <svg
-        className="absolute top-0 right-0 w-full h-full"
-        viewBox="0 0 1440 800"
-        preserveAspectRatio="none"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
+      <h3 className="text-xl font-bold text-[#0B2E13]">{title}</h3>
+      <p className="mt-3 leading-7 text-slate-600">{desc}</p>
+      <Link
+        to="/services"
+        className="mt-6 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[#16A34A] transition-all group-hover:gap-3"
       >
-        <path
-          d="M800 0 L1440 0 L1440 800 L600 800 Z"
-          fill="white"
-          fillOpacity="0.08"
-        />
-        <path
-          d="M900 0 L1440 0 L1440 600 L700 600 Z"
-          fill="white"
-          fillOpacity="0.05"
-        />
-      </svg>
-
-      {/* Green accent line */}
-      <div
-        className="absolute top-0 right-[20%] w-0.5 h-full bg-[#16A34A]/30"
-        style={{ transform: "rotate(15deg)", transformOrigin: "top center" }}
-      />
-    </div>
+        Explore service <span aria-hidden="true">→</span>
+      </Link>
+    </article>
   );
 });
-
-const DotPattern = memo(function DotPattern() {
-  return (
-    <div className="absolute bottom-0 left-0 w-96 h-96 opacity-20 pointer-events-none">
-      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern
-            id="dots"
-            x="0"
-            y="0"
-            width="30"
-            height="30"
-            patternUnits="userSpaceOnUse"
-          >
-            <circle cx="2" cy="2" r="2" fill="#8BC34A" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#dots)" />
-      </svg>
-    </div>
-  );
-});
-
-// ─────────────────────────────────────────────
-// MAIN COMPONENT
-// ─────────────────────────────────────────────
 
 function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
 
-  useEffect(() => {
-    setIsLoaded(true);
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const handleQuoteClick = useCallback(() => {
-    // Enterprise: Integrate with your CRM/analytics here
-    window.location.href = HERO_CONFIG.ctaLink;
-  }, []);
+  useEffect(() => setIsLoaded(true), []);
 
   return (
     <main>
-      {/* ═══════════════════════════════════════ */}
-      {/* HERO SECTION */}
-      {/* ═══════════════════════════════════════ */}
-      <section className="relative min-h-screen overflow-hidden bg-[#0B2E13]">
-        
-        {/* BACKGROUND LAYERS */}
-        
-        {/* 1. Truck Background Image */}
-        <div className="absolute inset-0 z-0">
+      <section className="relative isolate min-h-[720px] overflow-hidden bg-[#0B2E13] sm:min-h-screen">
+        <div className="absolute inset-0 -z-10">
           <img
             src={HERO_CONFIG.truckImage}
-            alt="Heavy duty mining truck"
-            className="w-full h-full object-cover object-center"
-            style={{
-              transform: `translateY(${scrollY * 0.3}px) scale(1.1)`,
-              transition: "transform 0.1s linear",
-            }}
+            alt="Heavy duty mining truck at work"
+            className="h-full w-full object-cover object-center scale-105"
           />
-          {/* Dark overlay for text readability */}
-          <div className="absolute inset-0 bg-[#0B2E13]/75" />
-          {/* Gradient overlay for depth */}
-          <div className="absolute inset-0 bg-linear-to-r from-[#0B2E13]/90 via-[#0B2E13]/60 to-transparent" />
+          <div className="absolute inset-0 bg-[#061b0b]/75" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#061b0b] via-[#0B2E13]/80 to-[#0B2E13]/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#061b0b] via-transparent to-[#0B2E13]/30" />
         </div>
 
-        {/* 2. Decorative Elements */}
-        <DiagonalAccent />
-        <DotPattern />
+        <div className="pointer-events-none absolute right-[-10%] top-0 hidden h-full w-1/2 -skew-x-12 bg-white/[0.05] lg:block" />
+        <div className="pointer-events-none absolute bottom-0 left-0 h-56 w-56 opacity-20 [background-image:radial-gradient(#8BC34A_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
 
-        {/* 3. Animated grain texture overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none z-1"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          }}
-        />
-
-        {/* CONTENT */}
-        <div className="relative z-10 min-h-screen flex flex-col justify-center px-6 sm:px-10 lg:px-16 pt-20 pb-32">
-          <div className="max-w-3xl">
-            {/* Eyebrow */}
-            <div
-              className={`
-                inline-flex items-center gap-2 px-4 py-2 bg-[#16A34A]/20 border border-[#16A34A]/30 rounded-full mb-6
-                transition-all duration-700 delay-100
-                ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
-              `}
-            >
-              <span className="w-2 h-2 bg-[#16A34A] rounded-full animate-pulse" />
-              <span className="text-[#16A34A] text-sm font-medium uppercase tracking-wider">
-                South Africa's Trusted Partner
-              </span>
+        <div className="mx-auto flex min-h-[720px] max-w-7xl flex-col justify-center px-6 pb-36 pt-28 sm:min-h-screen sm:px-10 lg:px-16">
+          <div className={`max-w-3xl transition-all duration-700 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}>
+            <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-[#8BC34A]/30 bg-[#16A34A]/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#B8E986]">
+              <span className="h-2 w-2 rounded-full bg-[#8BC34A] shadow-[0_0_14px_#8BC34A]" />
+              {HERO_CONFIG.eyebrow}
             </div>
 
-            {/* Headline */}
-            <h1
-              className={`
-                text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight
-                transition-all duration-700 delay-200
-                ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
-              `}
-            >
-              Mining &{" "}
-              <span className="text-[#16A34A]">Logistics</span>
-              <br />
-              Solutions
+            <h1 className="max-w-4xl text-5xl font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-6xl lg:text-8xl">
+              Mining & logistics, <span className="text-[#8BC34A]">built stronger.</span>
             </h1>
-
-            {/* Subheadline */}
-            <p
-              className={`
-                mt-6 text-lg sm:text-xl text-gray-300 max-w-xl leading-relaxed
-                transition-all duration-700 delay-300
-                ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
-              `}
-            >
+            <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-200 sm:text-xl">
               {HERO_CONFIG.subheadline}
             </p>
 
-            {/* CTA Group */}
-            <div
-              className={`
-                mt-8 flex flex-col sm:flex-row gap-4
-                transition-all duration-700 delay-500
-                ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
-              `}
-            >
-              <button
-                onClick={handleQuoteClick}
-                className="
-                  bg-white text-[#0B2E13] px-8 py-4 text-sm font-bold uppercase tracking-wider
-                  transition-all duration-300
-                  hover:bg-[#16A34A] hover:text-white hover:shadow-xl hover:shadow-[#16A34A]/30
-                  active:scale-95
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B2E13]
-                "
+            <div className="mt-9 flex flex-col gap-4 sm:flex-row">
+              <Link
+                to="/contact?intent=quote"
+                className="inline-flex items-center justify-center rounded-lg bg-[#8BC34A] px-7 py-4 text-sm font-black uppercase tracking-wider text-[#0B2E13] shadow-lg shadow-[#8BC34A]/20 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
-                {HERO_CONFIG.ctaText}
-              </button>
-
+                Request a quote <span className="ml-3 text-lg" aria-hidden="true">→</span>
+              </Link>
               <Link
                 to="/services"
-                className="
-                  inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-bold uppercase tracking-wider text-white border-2 border-white/30
-                  transition-all duration-300
-                  hover:bg-white/10 hover:border-white
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B2E13]
-                "
+                className="inline-flex items-center justify-center rounded-lg border border-white/40 bg-white/5 px-7 py-4 text-sm font-black uppercase tracking-wider text-white backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-white hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
-                Our Services
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                  />
-                </svg>
+                View our services
               </Link>
-            </div>
-          </div>
-
-          {/* Stats Bar - Bottom */}
-          <div
-            className={`
-              absolute bottom-0 left-0 right-0 bg-[#0B2E13]/90 backdrop-blur-md border-t border-white/10
-              transition-all duration-1000 delay-700
-              ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}
-            `}
-          >
-            <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {HERO_CONFIG.stats.map((stat, index) => (
-                  <StatCard
-                    key={stat.label}
-                    value={stat.value}
-                    label={stat.label}
-                    delay={index * 150}
-                  />
-                ))}
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <div
-          className={`
-            absolute bottom-28 left-1/2 -translate-x-1/2 z-10 hidden md:flex flex-col items-center gap-2
-            transition-opacity duration-1000 delay-1000
-            ${isLoaded ? "opacity-60" : "opacity-0"}
-          `}
-        >
-          <span className="text-white/60 text-xs uppercase tracking-widest">
-            Scroll
-          </span>
-          <div className="w-px h-8 bg-white/30 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-white animate-bounce" />
+        <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 bg-[#061b0b]/80 backdrop-blur-md">
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-y-5 px-6 py-6 sm:px-10 md:grid-cols-4 md:py-7 lg:px-16">
+            {HERO_CONFIG.stats.map((stat) => <StatCard key={stat.label} {...stat} />)}
           </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════ */}
-      {/* SERVICES PREVIEW SECTION (Automation Ready) */}
-      {/* ═══════════════════════════════════════ */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
-          <div className="text-center mb-16">
-            <span className="text-[#16A34A] text-sm font-bold uppercase tracking-widest">
-              What We Do
-            </span>
-            <h2 className="mt-3 text-3xl md:text-4xl font-bold text-[#0B2E13]">
-              Comprehensive Mining Services
-            </h2>
+      <section className="bg-slate-50 py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-16">
+          <div className="mb-14 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div className="max-w-2xl">
+              <p className="text-sm font-black uppercase tracking-[0.2em] text-[#16A34A]">What we do</p>
+              <h2 className="mt-3 text-4xl font-black tracking-tight text-[#0B2E13] sm:text-5xl">Capability you can count on.</h2>
+            </div>
+            <p className="max-w-md leading-7 text-slate-600">Practical solutions, experienced people and equipment ready to perform when your project cannot slow down.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                title: "Transport & Hauling",
-                desc: "End-to-end logistics with a fleet of 50+ heavy-duty vehicles.",
-                icon: "🚛",
-              },
-              {
-                title: "Plant Hire",
-                desc: "Excavators, bulldozers, and specialized mining equipment.",
-                icon: "⚙️",
-              },
-              {
-                title: "Maintenance",
-                desc: "24/7 on-site mechanical support and preventive servicing.",
-                icon: "🔧",
-              },
-            ].map((service, i) => (
-              <ServiceCard key={service.title} {...service} index={i} />
-            ))}
+          <div className="grid gap-6 md:grid-cols-3">
+            {SERVICES.map((service, index) => <ServiceCard key={service.title} {...service} index={index} />)}
           </div>
+        </div>
+      </section>
+
+      <section className="bg-[#0B2E13] px-6 py-20 sm:px-10 lg:px-16">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 rounded-2xl border border-white/10 bg-white/[0.04] p-8 sm:p-12 md:flex-row md:items-center">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#8BC34A]">Ready to move?</p>
+            <h2 className="mt-3 max-w-2xl text-3xl font-black text-white sm:text-4xl">Let&apos;s make your next project run better.</h2>
+          </div>
+          <Link to="/contact?intent=quote" className="shrink-0 rounded-lg bg-white px-7 py-4 text-sm font-black uppercase tracking-wider text-[#0B2E13] transition hover:bg-[#8BC34A]">Start a conversation <span className="ml-2" aria-hidden="true">→</span></Link>
         </div>
       </section>
     </main>
   );
 }
-
-const ServiceCard = memo(function ServiceCard({
-  title,
-  desc,
-  icon,
-  index,
-}) {
-  const [ref, isInView] = useInView(0.2);
-
-  return (
-    <div
-      ref={ref}
-      className={`
-        group p-8 border border-gray-200 hover:border-[#16A34A]/30 transition-all duration-500
-        hover:shadow-xl hover:shadow-[#0B2E13]/5 hover:-translate-y-1
-        ${isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}
-      `}
-      style={{ transitionDelay: `${index * 100}ms` }}
-    >
-      <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
-        {icon}
-      </div>
-      <h3 className="text-xl font-bold text-[#0B2E13] mb-3">{title}</h3>
-      <p className="text-gray-600 leading-relaxed">{desc}</p>
-      <Link
-        to="/services"
-        className="inline-flex items-center gap-2 mt-4 text-[#16A34A] font-semibold text-sm uppercase tracking-wider group-hover:gap-3 transition-all"
-      >
-        Learn More
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </Link>
-    </div>
-  );
-});
 
 export default memo(Home);
