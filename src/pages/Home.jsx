@@ -3,7 +3,6 @@ import { memo, useEffect, useRef, useState } from "react";
 
 const HERO_CONFIG = {
   eyebrow: "South Africa's trusted industrial partner",
-  headline: "Mining & logistics, built for the real world.",
   subheadline:
     "Reliable transport, plant hire, maintenance and industrial services delivered safely, on time and ready for the demands of your operation.",
   truckImage:
@@ -144,7 +143,7 @@ function Home() {
           <img
             src={HERO_CONFIG.truckImage}
             alt="Heavy duty mining truck at work"
-            className="h-full w-full object-cover object-center scale-105"
+            className="h-full w-full scale-105 object-cover object-center"
           />
           <div className="absolute inset-0 bg-[#061b0b]/75" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#061b0b] via-[#0B2E13]/80 to-[#0B2E13]/20" />
@@ -170,16 +169,10 @@ function Home() {
 
             <div className="mt-9 flex flex-col gap-4 sm:flex-row">
               <Link
-                to="/contact?intent=quote"
+                to="/services"
                 className="inline-flex items-center justify-center rounded-lg bg-[#8BC34A] px-7 py-4 text-sm font-black uppercase tracking-wider text-[#0B2E13] shadow-lg shadow-[#8BC34A]/20 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
-                Request a quote <span className="ml-3 text-lg" aria-hidden="true">→</span>
-              </Link>
-              <Link
-                to="/services"
-                className="inline-flex items-center justify-center rounded-lg border border-white/40 bg-white/5 px-7 py-4 text-sm font-black uppercase tracking-wider text-white backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-white hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                View our services
+                View our services <span className="ml-3 text-lg" aria-hidden="true">→</span>
               </Link>
             </div>
           </div>
@@ -214,7 +207,7 @@ function Home() {
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#8BC34A]">Ready to move?</p>
             <h2 className="mt-3 max-w-2xl text-3xl font-black text-white sm:text-4xl">Let&apos;s make your next project run better.</h2>
           </div>
-          <Link to="/contact?intent=quote" className="shrink-0 rounded-lg bg-white px-7 py-4 text-sm font-black uppercase tracking-wider text-[#0B2E13] transition hover:bg-[#8BC34A]">Start a conversation <span className="ml-2" aria-hidden="true">→</span></Link>
+          <Link to="/contact" className="shrink-0 rounded-lg bg-white px-7 py-4 text-sm font-black uppercase tracking-wider text-[#0B2E13] transition hover:bg-[#8BC34A]">Contact us <span className="ml-2" aria-hidden="true">→</span></Link>
         </div>
       </section>
     </main>
