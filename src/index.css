@@ -1,4 +1,4 @@
- @import "tailwindcss";
+@import "tailwindcss";
 
 /* =========================
    GLOBAL RESET
@@ -6,7 +6,15 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
